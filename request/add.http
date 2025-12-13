@@ -1,0 +1,10 @@
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+  "name": "t",
+  "price": -10.4,
+  "description": "dadaasda",
+  "image": "http://teste.com/jpg",
+  "quantity": 10
+}
