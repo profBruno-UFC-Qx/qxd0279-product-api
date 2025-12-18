@@ -2,7 +2,7 @@ import { z } from "zod";
 import { type NextFunction, type Request, type Response } from 'express';
 export const validate = (schema: z.ZodType) => (req: Request, res: Response, next: NextFunction) => {
     try {
-      req.validated = schema.parse(req.body);
+      schema.parse(req.body);
       next();
     } catch (err) {
       if(err instanceof z.ZodError) {

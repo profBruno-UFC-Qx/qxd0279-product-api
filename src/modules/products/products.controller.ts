@@ -1,7 +1,5 @@
 import type { Request, Response } from "express";
 import { productService } from "./products.service.js";
-import { createProduct } from "./products.schema.js";
-import { ZodError } from "zod";
 
 export function getAll(req: Request, res: Response) {
   res.json({
