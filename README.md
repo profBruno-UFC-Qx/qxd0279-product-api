@@ -8,6 +8,8 @@ Esta é uma API REST para gerenciamento de produtos, desenvolvida como um materi
 - **Express**: Framework para construção de APIs.
 - **TypeScript**: Superset do JavaScript que adiciona tipagem estática.
 - **Zod**: Biblioteca para declaração e validação de schemas.
+- **@asteasolutions/zod-to-openapi**: Ferramenta para gerar documentação OpenAPI (Swagger) a partir de schemas Zod.
+- **swagger-ui-express**: Middleware para servir a interface do Swagger UI.
 - **tsx**: Ferramenta para executar arquivos TypeScript diretamente, sem compilação prévia em desenvolvimento.
 - **Morgan**: Middleware para logs de requisições HTTP.
 - **CORS**: Middleware para habilitar o Cross-Origin Resource Sharing.
@@ -31,11 +33,21 @@ Esta é uma API REST para gerenciamento de produtos, desenvolvida como um materi
     npm run dev
     ```
 
+## Documentação da API
+
+A documentação completa da API, gerada automaticamente, está disponível em:
+
+- **[http://localhost:3000/docs](http://localhost:3000/docs)**
+
 ## Endpoints da API
+
+O CRUD de produtos está completo e todos os endpoints estão documentados via Swagger.
 
 - `GET /products`: Retorna uma lista de todos os produtos.
 - `GET /products/:id`: Retorna um produto específico pelo seu ID.
 - `POST /products`: Cria um novo produto. O corpo da requisição deve seguir o schema definido.
+- `PUT /products/:id`: Atualiza um produto existente.
+- `DELETE /products/:id`: Remove um produto pelo seu ID.
 
 ---
 
@@ -54,107 +66,110 @@ Em vez de colocar toda a lógica em um único arquivo, a aplicação é dividida
 
 **Por que isso é bom?**
 - **Manutenibilidade:** É mais fácil encontrar e modificar o código.
-- **Reutilização:** A lógica de serviço pode ser facilmente reutilizada por outros partes do sistema.
+- **Reutilização:** A lógica de serviço pode ser facilmente reutilizada por outras partes do sistema.
 - **Testabilidade:** Cada camada pode ser testada de forma isolada.
 
 ### 2. Validação de Schema com Zod
 
-A API não confia cegamente nos dados recebidos. Antes de processar uma requisição de criação de produto, um middleware valida o corpo (`body`) para garantir que ele contenha os campos necessários e com os tipos corretos.
+A API não confia cegamente nos dados recebidos. Antes de processar uma requisição, um middleware valida o corpo (`body`), os parâmetros (`params`) ou as queries (`query`) para garantir que eles contenham os campos necessários e com os tipos corretos.
 
 **Exemplo (`src/modules/products/products.routes.ts`):**
 ```typescript
 // ...
 import { validate } from "../../middlewares/zodMiddleware.js"
-import { createProduct } from "./products.schema.js"
+import { createProductSchema } from "./products.schema.js"
 
-// A rota de POST usa o middleware 'validate' antes de chamar o controller 'add'
-productsRouter.post('/', validate(createProduct), add)
-```
-
-**Exemplo de Schema (`src/modules/products/products.schema.ts`):**
-```typescript
-import { z } from 'zod';
-
-export const createProduct = z.object({
-  body: z.object({
-    name: z.string({ required_error: 'Name is required' }),
-    price: z.number().positive(),
-    description: z.string().optional(),
-  }),
-});
+// A rota de POST usa o middleware 'validate' antes de chamar o controller
+productsRouter.post('/', validate(createProductSchema), add)
 ```
 
 **Por que isso é bom?**
 - **Segurança e Robustez:** Protege a aplicação contra dados malformados ou maliciosos.
-- **Centralização:** A "forma" dos dados é definida em um único lugar, servindo como documentação.
+- **Centralização:** A "forma" dos dados é definida em um único lugar, servindo como documentação viva.
 - **Melhor Feedback para o Cliente:** Retorna erros claros se os dados enviados estiverem incorretos.
 
-### 3. Uso de TypeScript
+### 3. Documentação Automatizada com Swagger e Zod
 
-O uso de TypeScript em todo o projeto adiciona segurança de tipo, o que ajuda a prevenir uma categoria inteira de bugs em tempo de desenvolvimento, em vez de em produção.
+Manter a documentação da API atualizada é um desafio. Esta API resolve isso gerando a documentação dinamicamente a partir dos próprios schemas Zod.
+
+Usamos a biblioteca **`@asteasolutions/zod-to-openapi`** para converter os schemas de validação em definições OpenAPI (Swagger). Em seguida, o **`swagger-ui-express`** serve uma página interativa com todos os endpoints.
+
+**Exemplo (`src/docs/openapi.ts`):**
+```typescript
+import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
+
+
+const registry = new OpenAPIRegistry();
+// ... registro das rotas ...
+
+export const buildOpenAPIDocument = (): ReturnType<OpenApiGeneratorV3['generateDocument']> => {
+  const generator = new OpenApiGeneratorV3(registry.definitions);
+  return generator.generateDocument({
+    openapi: '3.0.0',
+    info: {
+        version: '1.0.0',
+        title: 'API de Produtos',
+    },
+  });
+}
+```
+
+**Por que isso é bom?**
+- **Fonte Única de Verdade (Single Source of Truth):** A validação e a documentação são baseadas no mesmo schema. Se você atualizar o schema, a documentação é atualizada automaticamente.
+- **Sempre Atualizada:** Elimina o risco de a documentação ficar obsoleta em relação ao código.
+- **Desenvolvimento Eficiente:** Facilita o consumo da API por outros desenvolvedores (frontend ou outros serviços).
+
+### 4. Middleware Centralizado para Tratamento de Erros
+
+A aplicação possui um middleware de erro que captura todas as exceções lançadas nos controllers ou serviços, evitando que o servidor quebre (`crash`) e garantindo que uma resposta de erro formatada seja enviada ao cliente.
 
 **Exemplo (`src/app.ts`):**
 ```typescript
-import express, { type Application, type Request, type Response } from 'express';
+// ...
+import { handlerError } from './middlewares/errorMiddleware.js';
 
-const app: Application = express();
-const PORT: number = 3000;
-
-app.get('/', (req: Request, res: Response) => {
-    res.send({ message: 'API de Produtos rodando com sucesso!' });
-});
+// ...
+app.use(handlerError) // Registrado após as rotas
 ```
+
+**Exemplo (`src/middlewares/errorMiddleware.ts`):**
+```typescript
+export const handlerError = (err, req, res, next) => {
+  // Lógica para formatar e logar o erro
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).send({
+    message: err.message || 'Erro interno do servidor',
+    // stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+};
+```
+
+**Por que isso é bom?**
+- **Robustez:** Impede que erros não tratados parem a aplicação.
+- **Consistência:** Padroniza o formato das respostas de erro em toda a API.
+- **Segurança:** Evita o vazamento de detalhes sensíveis da implementação (como *stack traces*) em ambiente de produção.
+
+### 5. Uso de TypeScript para Segurança de Tipo
+
+O uso de TypeScript em todo o projeto adiciona segurança de tipo, o que ajuda a prevenir uma categoria inteira de bugs em tempo de desenvolvimento, em vez de em produção.
+
 **Por que isso é bom?**
 - **Detecção Antecipada de Erros:** O compilador avisa sobre tipos incompatíveis.
 - **Autocomplete e IntelliSense:** Melhora a experiência de desenvolvimento.
 - **Código Auto-Documentado:** As assinaturas de função e tipos de dados tornam o código mais fácil de entender.
 
-### 4. Abstração da Lógica de Dados (Repository Pattern)
+### 6. Abstração da Lógica de Dados (Repository Pattern)
 
-A camada de serviço não interage diretamente com um banco de dados. Em vez disso, ela depende de um "repositório" que expõe métodos como `getAll` ou `save`.
-
-**Exemplo (`src/modules/products/products.repository.ts`):**
-```typescript
-// Exemplo hipotético de como o repositório poderia ser
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
-
-const products: Product[] = [];
-let id = 1;
-
-export const repository = {
-  getAll: (): Product[] => products,
-  getById: (id: number): Product | undefined => products.find(p => p.id === id),
-  save: (name: string, price: number): Product => {
-    const newProduct = { id: id++, name, price };
-    products.push(newProduct);
-    return newProduct;
-  }
-}
-```
+A camada de serviço não interage diretamente com um banco de dados ou outra fonte de dados. Em vez disso, ela depende de um "repositório" que expõe métodos como `getAll` ou `save`.
 
 **Por que isso é bom?**
-- **Flexibilidade:** Se você decidir trocar o armazenamento de um array em memória para um banco de dados como PostgreSQL ou MongoDB, precisará alterar apenas o repositório. A camada de serviço e os controllers permanecem intactos.
+- **Flexibilidade:** Se você decidir trocar o armazenamento de um array em memória para um banco de dados como PostgreSQL, precisará alterar apenas o repositório. O resto da aplicação permanece intacto.
 - **Testes:** É fácil criar um "mock" do repositório para testar a lógica de negócio sem precisar de um banco de dados real.
 
-### 5. Middlewares para Tarefas Comuns
+### 7. Middlewares para Tarefas Comuns
 
-A aplicação utiliza middlewares do Express para lidar com tarefas transversais, como logging de requisições e configuração de CORS.
+A aplicação utiliza middlewares do Express para lidar com tarefas transversais, como logging de requisições (`morgan`) e configuração de CORS.
 
-**Exemplo (`src/app.ts`):**
-```typescript
-import cors from 'cors';
-import morgan from 'morgan'
-
-// ...
-app.use(morgan('tiny'))
-app.use(cors({
-    origin: 'http://localhost:8080', 
-}));
-```
 **Por que isso é bom?**
 - **Código DRY (Don't Repeat Yourself):** Evita a repetição de código em todas as rotas.
-- **Organização:** Mantém a lógica de cada rota focada em sua tarefa principal, delegando preocupações comuns aos middlewares.
+- **Organização:** Mantém a lógica de cada rota focada em sua tarefa principal.
