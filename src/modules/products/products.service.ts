@@ -1,4 +1,5 @@
-import { type Product, ProductRepository } from "./products.repository.js";
+import { ProductRepository } from "./products.repository.js";
+import { type Product } from "./products.repository.js";
 
 class ProductService {
   private repository: ProductRepository;
@@ -22,6 +23,27 @@ class ProductService {
   add(product: Omit<Product, 'id'>): Product {
     return this.repository.add(product)
   }
+ 
+
+  update(id: number, product: Omit<Product, 'id'>): Product | undefined {
+    const toUpdateProduct = {
+      id,
+      ...product
+    }
+    return this.repository.update(toUpdateProduct)
+  }
+
+  remove(id: number, product: Omit<Product, 'id'>): Product | undefined {
+    const toUpdateProduct = {
+      id,
+      ...product
+    }
+    return this.repository.remove(toUpdateProduct)
+  }
+
  }
+
+
+
 
 export const productService = new ProductService(new ProductRepository())

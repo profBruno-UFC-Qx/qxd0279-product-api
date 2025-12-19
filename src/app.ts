@@ -1,6 +1,8 @@
 import express, { type Application, type Request, type Response } from 'express';
 import cors from 'cors';
 import morgan from 'morgan'
+import swaggerUi from 'swagger-ui-express'
+import { buildOpenAPIDocument } from './docs/openapi.js';
 import productsRouter from './modules/products/products.routes.js';
 import { handlerError } from './middlewares/errorMiddleware.js';
 
@@ -15,6 +17,10 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+const openApiDocs = buildOpenAPIDocument()
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocs))
+
 
 app.use('/products', productsRouter)
 

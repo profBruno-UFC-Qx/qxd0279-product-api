@@ -41,5 +41,19 @@ export class ProductRepository {
     products.push(newProduct)
     return newProduct
   }
+
+  remove(product: Product): Product | undefined {
+    const toRemove = products.findIndex((p) => p.id == product.id)
+    return products.splice(toRemove, 1).at(0)
+  }
+
+  update(product: Product): Product | undefined {
+    const toUpdate = products.findIndex((p) => p.id == product.id)
+    if(toUpdate != -1) {
+      products[toUpdate] = product
+      return product
+    }
+    return undefined
+  }
   
 }

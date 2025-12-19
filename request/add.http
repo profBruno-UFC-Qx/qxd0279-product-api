@@ -2,9 +2,9 @@ POST http://localhost:3000/products
 Content-Type: application/json
 
 {
-  "name": "t",
-  "price": -10.4,
-  "description": "dadaasda",
-  "image": "http://teste.com/jpg",
+  "name": "Liquidifcador",
+  "price": 100.4,
+  "description": "Melhor liquidificador do mercado",
+  "image": "http://minhaloja.com/liqui.jpg",
   "quantity": 10
 }
