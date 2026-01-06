@@ -31,6 +31,10 @@
     // "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
 
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
