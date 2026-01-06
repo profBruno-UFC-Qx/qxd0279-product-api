@@ -1,16 +1,16 @@
 import type { Request, Response } from "express"
 import { productService } from "./products.service.js"
 
-export function getAll(req: Request, res: Response) {
+export async function getAll(req: Request, res: Response) {
   res.json({
-    data: productService.getAll()
+    data: await productService.getAll()
   })
 }
 
-export function getById(req: Request, res: Response) {
+export async function getById(req: Request, res: Response) {
   const id = Number(req.params.id)
   try {
-    const product = productService.getById(id)
+    const product = await productService.getById(id)
     res.json({ 
       data: product 
     })
@@ -21,17 +21,17 @@ export function getById(req: Request, res: Response) {
   }
 }
 
-export function add(req: Request, res: Response) {
+export async function add(req: Request, res: Response) {
 
-  const product = productService.add(req.body)
+  const product = await productService.add(req.body)
   res.status(201).json({
     data: product
   })
 }
 
-export function update(req: Request, res: Response) {
+export async function update(req: Request, res: Response) {
   const id = Number(req.params.id)
-  const product = productService.update(id, req.body)
+  const product = await productService.update(id, req.body)
   if(product) {
       res.json({
         data: product
@@ -48,9 +48,9 @@ export function update(req: Request, res: Response) {
   }
 }
 
-export function remove(req: Request, res: Response) {
+export async function remove(req: Request, res: Response) {
   const id = Number(req.params.id)
-  const product = productService.remove(id, req.body)
+  const product = await productService.remove(id, req.body)
   if(product) {
       res.status(204).json()
   } else {
