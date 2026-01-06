@@ -1,44 +1,35 @@
 import { ProductRepository } from "./products.repository.js";
-import { type Product } from "./products.repository.js";
+import { type Product } from "./products.entity.js";
 
-class ProductService {
-  private repository: ProductRepository;
-
-  constructor(repository: ProductRepository) {
-    this.repository = repository;
+export class ProductService {
+  
+  async getAll(): Promise<Product[]> {
+    return ProductRepository.find()
   }
 
-  getAll(): Product[] {
-    return this.repository.find()
+  async getById(id: number): Promise<Product | null> {
+    return ProductRepository.findOneBy({ id })
   }
 
-  getById(id: number): Product {
-    const product = this.repository.findById(id)
-    if (product) {
-      return product
-    } 
-    throw Error("Product not found")
-  }
-
-  add(product: Omit<Product, 'id'>): Product {
-    return this.repository.add(product)
+  async add(product: Omit<Product, 'id'>): Promise<Product | null> {
+    const result = await ProductRepository.insert(product)
+    if(result.identifiers.length == 1 ) {
+      return { id: result.raw.insertId, ...product }
+    }
+    return null
   }
  
 
-  update(id: number, product: Omit<Product, 'id'>): Product | undefined {
+  async update(id: number, product: Omit<Product, 'id'>): Promise<Product | undefined> {
     const toUpdateProduct = {
       id,
       ...product
     }
-    return this.repository.update(toUpdateProduct)
+    return ProductRepository.save(toUpdateProduct)
   }
 
-  remove(id: number, product: Omit<Product, 'id'>): Product | undefined {
-    const toUpdateProduct = {
-      id,
-      ...product
-    }
-    return this.repository.remove(toUpdateProduct)
+  async remove(id: number) {
+    return ProductRepository.delete(id)
   }
 
  }
@@ -46,4 +37,4 @@ class ProductService {
 
 
 
-export const productService = new ProductService(new ProductRepository())
+export const productService = new ProductService()
