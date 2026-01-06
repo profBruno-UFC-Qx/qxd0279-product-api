@@ -22,3 +22,6 @@ lerna-debug.log*
 dist/
 build/
 coverage/
+
+#SQLite databse
+*.sqlite
