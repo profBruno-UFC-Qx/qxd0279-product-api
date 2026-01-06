@@ -28,12 +28,8 @@ export class ProductService {
     return ProductRepository.save(toUpdateProduct)
   }
 
-  async remove(id: number, product: Omit<Product, 'id'>): Promise<Product | undefined> {
-    const toUpdateProduct = {
-      id,
-      ...product
-    }
-    return ProductRepository.remove(toUpdateProduct)
+  async remove(id: number) {
+    return ProductRepository.delete(id)
   }
 
  }
