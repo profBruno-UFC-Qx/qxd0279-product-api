@@ -7,6 +7,8 @@ Esta é uma API REST para gerenciamento de produtos, desenvolvida como um materi
 - **Node.js**: Ambiente de execução JavaScript no servidor.
 - **Express**: Framework para construção de APIs.
 - **TypeScript**: Superset do JavaScript que adiciona tipagem estática.
+- **TypeORM**: ORM (Object-Relational Mapper) para interação com o banco de dados.
+- **SQLite3**: Banco de dados SQL leve e baseado em arquivo, usado para desenvolvimento.
 - **Zod**: Biblioteca para declaração e validação de schemas.
 - **@asteasolutions/zod-to-openapi**: Ferramenta para gerar documentação OpenAPI (Swagger) a partir de schemas Zod.
 - **swagger-ui-express**: Middleware para servir a interface do Swagger UI.
@@ -28,7 +30,7 @@ Esta é uma API REST para gerenciamento de produtos, desenvolvida como um materi
     ```
 
 3.  **Execute em modo de desenvolvimento:**
-    O servidor iniciará em `http://localhost:3000` e será reiniciado automaticamente a cada alteração no código.
+    O servidor iniciará em `http://localhost:3000` e será reiniciado automaticamente a cada alteração no código. O TypeORM criará um arquivo `database.sqlite` na raiz do projeto para armazenar os dados.
     ```bash
     npm run dev
     ```
@@ -69,7 +71,25 @@ Em vez de colocar toda a lógica em um único arquivo, a aplicação é dividida
 - **Reutilização:** A lógica de serviço pode ser facilmente reutilizada por outras partes do sistema.
 - **Testabilidade:** Cada camada pode ser testada de forma isolada.
 
-### 2. Validação de Schema com Zod
+### 2. Persistência de Dados com TypeORM e Padrão Repository
+
+A versão anterior desta API armazenava os dados em um array em memória, o que significava que os dados eram perdidos a cada reinicialização do servidor. Esta versão introduz a persistência de dados usando **TypeORM**, um poderoso ORM para TypeScript.
+
+-   **Configuração do Banco de Dados (`src/config/datasource.ts`)**:
+    Aqui é configurada a conexão com o banco de dados. Para este projeto, usamos o **SQLite**, um banco de dados leve que armazena tudo em um único arquivo (`database.sqlite`). A opção `synchronize: true` é ideal para desenvolvimento, pois cria e atualiza o schema do banco de dados automaticamente com base nas entidades.
+
+-   **Entidades (`src/modules/products/products.entity.ts`)**:
+    Uma entidade é uma classe que mapeia para uma tabela no banco de dados. A classe `Product` é decorada com anotações do TypeORM (`@Entity`, `@Column`, `@PrimaryGeneratedColumn`) para definir a estrutura da tabela `product`.
+
+-   **Padrão Repository (`src/modules/products/products.repository.ts`)**:
+    A camada de serviço não interage diretamente com o TypeORM. Em vez disso, ela depende de um "repositório". O `ProductRepository` é criado estendendo o repositório base do TypeORM, o que nos permite adicionar métodos customizados para consultas específicas.
+
+**Por que isso é bom?**
+-   **Abstração e Flexibilidade:** A lógica de negócio no serviço não sabe qual banco de dados está sendo usado. Se decidirmos trocar o SQLite por PostgreSQL, apenas a configuração do `datasource` e talvez o repositório precisariam ser alterados. A camada de serviço permanece intacta.
+-   **Código Organizado:** A lógica de acesso a dados fica centralizada no repositório, tornando o código mais limpo e fácil de manter.
+-   **Poder do ORM:** O TypeORM oferece recursos avançados como migrações, relações entre entidades e um construtor de consultas robusto, facilitando o trabalho com bancos de dados complexos.
+
+### 3. Validação de Schema com Zod
 
 A API não confia cegamente nos dados recebidos. Antes de processar uma requisição, um middleware valida o corpo (`body`), os parâmetros (`params`) ou as queries (`query`) para garantir que eles contenham os campos necessários e com os tipos corretos.
 
@@ -88,7 +108,7 @@ productsRouter.post('/', validate(createProductSchema), add)
 - **Centralização:** A "forma" dos dados é definida em um único lugar, servindo como documentação viva.
 - **Melhor Feedback para o Cliente:** Retorna erros claros se os dados enviados estiverem incorretos.
 
-### 3. Documentação Automatizada com Swagger e Zod
+### 4. Documentação Automatizada com Swagger e Zod
 
 Manter a documentação da API atualizada é um desafio. Esta API resolve isso gerando a documentação dinamicamente a partir dos próprios schemas Zod.
 
@@ -119,7 +139,7 @@ export const buildOpenAPIDocument = (): ReturnType<OpenApiGeneratorV3['generateD
 - **Sempre Atualizada:** Elimina o risco de a documentação ficar obsoleta em relação ao código.
 - **Desenvolvimento Eficiente:** Facilita o consumo da API por outros desenvolvedores (frontend ou outros serviços).
 
-### 4. Middleware Centralizado para Tratamento de Erros
+### 5. Middleware Centralizado para Tratamento de Erros
 
 A aplicação possui um middleware de erro que captura todas as exceções lançadas nos controllers ou serviços, evitando que o servidor quebre (`crash`) e garantindo que uma resposta de erro formatada seja enviada ao cliente.
 
@@ -149,7 +169,7 @@ export const handlerError = (err, req, res, next) => {
 - **Consistência:** Padroniza o formato das respostas de erro em toda a API.
 - **Segurança:** Evita o vazamento de detalhes sensíveis da implementação (como *stack traces*) em ambiente de produção.
 
-### 5. Uso de TypeScript para Segurança de Tipo
+### 6. Uso de TypeScript para Segurança de Tipo
 
 O uso de TypeScript em todo o projeto adiciona segurança de tipo, o que ajuda a prevenir uma categoria inteira de bugs em tempo de desenvolvimento, em vez de em produção.
 
@@ -157,14 +177,6 @@ O uso de TypeScript em todo o projeto adiciona segurança de tipo, o que ajuda a
 - **Detecção Antecipada de Erros:** O compilador avisa sobre tipos incompatíveis.
 - **Autocomplete e IntelliSense:** Melhora a experiência de desenvolvimento.
 - **Código Auto-Documentado:** As assinaturas de função e tipos de dados tornam o código mais fácil de entender.
-
-### 6. Abstração da Lógica de Dados (Repository Pattern)
-
-A camada de serviço não interage diretamente com um banco de dados ou outra fonte de dados. Em vez disso, ela depende de um "repositório" que expõe métodos como `getAll` ou `save`.
-
-**Por que isso é bom?**
-- **Flexibilidade:** Se você decidir trocar o armazenamento de um array em memória para um banco de dados como PostgreSQL, precisará alterar apenas o repositório. O resto da aplicação permanece intacto.
-- **Testes:** É fácil criar um "mock" do repositório para testar a lógica de negócio sem precisar de um banco de dados real.
 
 ### 7. Middlewares para Tarefas Comuns
 
