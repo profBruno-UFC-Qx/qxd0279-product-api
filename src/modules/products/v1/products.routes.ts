@@ -1,16 +1,16 @@
 import { Router } from "express"
-import { add, getAll, getById, update, remove } from "./products.controller.js"
-import { validateBody, validateParams } from "../../middlewares/zodMiddleware.js"
+import { ProductController } from "./products.controller.js"
+import { validateBody, validateParams } from "../../../middlewares/zodMiddleware.js"
 import { createProduct, productSchema } from "./products.schema.js"
-import { registry } from "../../docs/openapi.js"
-import { idSchema, resCollectionEntitySchema, resSingleEntitySchema } from "../../shared/schemas.js"
+import { registry } from "../../../docs/openapi.js"
+import { idSchema, resCollectionEntitySchema, resSingleEntitySchema } from "../../../shared/schemas.js"
 
 const productsRouter = Router()
 
 
 registry.registerPath({
   method: "get",
-  path: "/products",
+  path: "/v1/products",
   description: "Retorna todos os produtos",
   responses: {
     200: {
@@ -22,12 +22,12 @@ registry.registerPath({
       }
     },
   },
-  tags: ["Products"]
+  tags: ["Products", "V1"]
 })
 
 registry.registerPath({
   method: "get",
-  path: "/products/{id}",
+  path: "/v1/products/{id}",
   description: "Retorna um produto pelo ID",
   request: {
     params: idSchema,
@@ -45,12 +45,12 @@ registry.registerPath({
       description: "Produto não encontrado"
     }
   },
-  tags: ["Products"]
+  tags: ["Products", "V1"]
 })
 
 registry.registerPath({
   method: "post",
-  path: "/products",
+  path: "/v1/products",
   description: "Cria um novo produto",
   request: {
     body: {
@@ -71,12 +71,12 @@ registry.registerPath({
       }
     },
   },
-  tags: ["Products"]
+  tags: ["Products", "V1"]
 })
 
 registry.registerPath({
   method: "put",
-  path: "/products/{id}",
+  path: "/v1/products/{id}",
   description: "Atualiza um produto existente",
   request: {
     params: idSchema,
@@ -101,12 +101,12 @@ registry.registerPath({
       description: "Produto não encontrado"
     }
   },
-  tags: ["Products"]
+  tags: ["Products", "V1"]
 })
 
 registry.registerPath({
   method: "delete",
-  path: "/products/{id}",
+  path: "/v1/products/{id}",
   description: "Remove um produto",
   request: {
     params: idSchema
@@ -119,14 +119,16 @@ registry.registerPath({
       description: "Produto não encontrado"
     }
   },
-  tags: ["Products"]
+  tags: ["Products", "V1"]
 })
 
-productsRouter.get('/', getAll)
-productsRouter.post('/', validateBody(createProduct), add)
-productsRouter.get('/:id', validateParams(idSchema), getById)
-productsRouter.put('/:id', validateParams(idSchema), validateBody(createProduct), update)
-productsRouter.delete('/:id', validateParams(idSchema), remove)
+const productController = new ProductController()
+
+productsRouter.get('/', productController.getAll)
+productsRouter.post('/', validateBody(createProduct), productController.add)
+productsRouter.get('/:id', validateParams(idSchema), productController.getById)
+productsRouter.put('/:id', validateParams(idSchema), validateBody(createProduct), productController.update)
+productsRouter.delete('/:id', validateParams(idSchema), productController.remove)
 
 
 export default productsRouter

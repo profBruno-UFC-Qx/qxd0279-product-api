@@ -34,6 +34,23 @@ export const validateParams =
     }
   };
 
+export const validateQuery =
+  (schema: z.ZodType) => (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.query);
+      next();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: zodErrorToResponse(err, "VALIDATION ERROR"),
+          meta: metaFrom(req),
+        });
+      }
+    }
+  };
+
+
 function zodErrorToResponse(err: z.ZodError, code: string) {
   return {
     error: {
