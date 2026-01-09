@@ -3,8 +3,8 @@ import { ProductController } from "./products.controller.js"
 import { validateBody, validateParams, validateQuery } from "../../../middlewares/zodMiddleware.js"
 import { createProduct, productSchema } from "../v1/products.schema.js"
 import { registry } from "../../../docs/openapi.js"
-import { idSchema, resCollectionEntitySchema, resSingleEntitySchema } from "../../../shared/schemas.js"
-import { offsetPaginationQuerySchema } from "./products.schema.js"
+import { idSchema, resCollectionEntitySchema, resCollectionEntitySchemaWithPages, resSingleEntitySchema } from "../../../shared/schemas.js"
+import { offsetPaginationQuerySchema, pagePaginationQuerySchema } from "./products.schema.js"
 
 const productsRouter = Router()
 
@@ -14,14 +14,14 @@ registry.registerPath({
   path: "/v2/products",
   description: "Retorna todos os produtos",
   request: {
-    query: offsetPaginationQuerySchema
+    query: pagePaginationQuerySchema 
   },
   responses: {
     200: {
       description: "Lista de produtos",
       content: {
         "application/json": {
-          schema: resCollectionEntitySchema(createProduct)
+          schema: resCollectionEntitySchemaWithPages(createProduct)
         }
       }
     },
@@ -35,7 +35,6 @@ registry.registerPath({
   description: "Retorna um produto pelo ID",
   request: {
     params: idSchema,
-    query: offsetPaginationQuerySchema
   },
   responses: {
     200: {
@@ -129,7 +128,7 @@ registry.registerPath({
 
 const productController = new ProductController()
 
-productsRouter.get('/', validateQuery(offsetPaginationQuerySchema), productController.getAll)
+productsRouter.get('/', validateQuery(pagePaginationQuerySchema), productController.getAll)
 productsRouter.post('/', validateBody(createProduct), productController.add)
 productsRouter.get('/:id', validateParams(idSchema), productController.getById)
 productsRouter.put('/:id', validateParams(idSchema), validateBody(createProduct), productController.update)

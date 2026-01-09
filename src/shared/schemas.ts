@@ -19,7 +19,25 @@ export const resCollectionEntitySchema = (schema: ZodType) => {
 }
 
 export const resCollectionEntitySchemaWithTotal = (schema: ZodType) => {
-  resCollectionEntitySchema(schema).extend({
+  return resCollectionEntitySchema(schema).extend({
     total: z.number().int()
+  })
+}
+
+export const resCollectionEntitySchemaWithPages = (schema: ZodType) => {
+  return resCollectionEntitySchema(schema).extend({
+    meta: z.object({
+      page: z.number().int().openapi('Página atual'),
+      pageSize: z.number().int().openapi('Número de items na página'),
+      pageCount: z.number().int().openapi('Número total de páginas'),
+      total: z.number().int().openapi('Número total de items')
+
+    })
+  })
+}
+
+export const resCollectionEntitySchemaWithKeySet = (schema: ZodType) => {
+  return resCollectionEntitySchema(schema).extend({
+    next: z.number().int()
   })
 }

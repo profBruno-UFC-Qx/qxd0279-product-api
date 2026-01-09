@@ -1,1 +1,1 @@
-GET http://localhost:3000/v2/products?offset=1
+GET http://localhost:3000/v2/products?page=1

@@ -1,17 +1,23 @@
 import type { Request, Response } from "express";
-import { ProductController as ProductControllerV1 } from "../v1/products.controller.js";
 import { ProductService } from "./products.service.js";
+import { ProductController as ProductControllerV1 } from "../v1/products.controller.js";
 
 export class ProductController extends ProductControllerV1 {
-  constructor(protected productService = new ProductService()) {
+  constructor(protected productService: ProductService = new ProductService()) {
     super(productService)
   }
 
   getAll = async (req: Request, res: Response) => {
-    const { offset, limit } = req.query
+    // OffsetBased - Pagination
+    // const { offset, limit } = res.locals.query
+    // res.json(await this.productService.getAllWithOffset(offset, limit));
 
-    res.json(
-      await this.productService.getAllWithOffSet(Number(offset) || 0, Number(limit)|| 10));
-  }
+    // PageBased - Pagination
+    //const { page, pageSize } = res.locals.query
+    //res.json(await this.productService.getAllByPage(page, pageSize));
 
+    // Keyset - Pagination
+    const { cursor, limit } = res.locals.query
+    res.json(await this.productService.getByKeyset(cursor, limit));
+  };
 }

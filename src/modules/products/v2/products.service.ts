@@ -1,6 +1,7 @@
 import { ProductRepository } from "../v1/products.repository.js";
 import { type Product } from "../v1/products.entity.js";
 import { ProductService as ProductServiceWithoutPagination } from "../v1/products.service.js";
+import type { PaginationMetaInfo } from "../../../shared/types.js";
 
 export class ProductService extends ProductServiceWithoutPagination{
   
@@ -10,8 +11,45 @@ export class ProductService extends ProductServiceWithoutPagination{
       take: limit,
       order: { id: "ASC" }
     })
-
     return { data, total }
+  }
+  
+  
+  async getAllByPage(page: number, pageSize: number): Promise<{ data: Product[], meta: PaginationMetaInfo}> {
+    const offset = (page - 1) * pageSize
+    console.log(offset, page, pageSize)
+    const [data, total] = await ProductRepository.findAndCount({
+      skip: offset,
+      take: pageSize,
+      order: { id: "ASC" }
+    })
+    return { 
+      data,
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total/pageSize)
+      }  
+    }
+  }
+
+  async getByKeyset(afterId?: number, limit: number = 10): Promise<{ data: Product[], next: number | undefined}> {
+
+    const qb = ProductRepository.createQueryBuilder("product")
+    .orderBy("product.id", "ASC")
+    .take(limit);
+
+    if (afterId) {
+      qb.where("product.id > :afterId", { afterId });
+    }
+
+    const data = await qb.getMany();
+
+    return {
+      data,
+      next: data.length > 0 ? data[data.length - 1]?.id : undefined,
+    };
   }
 
  }
