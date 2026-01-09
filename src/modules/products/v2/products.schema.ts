@@ -22,3 +22,8 @@ export const timebasedPaginationQuerySchema = z.object({
   cursor: z.iso.datetime(),
   limit: z.coerce.number().int().min(1).max(100).default(10)
 });
+
+export const cursorPaginationQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(10)
+});

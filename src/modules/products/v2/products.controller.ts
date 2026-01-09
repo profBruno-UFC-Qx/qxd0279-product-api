@@ -20,8 +20,12 @@ export class ProductController extends ProductControllerV1 {
     // const { cursor, limit } = res.locals.query
     // res.json(await this.productService.getByKeyset(cursor, limit));
 
-     // Timebased - Pagination
+    // Timebased - Pagination
+    // const { cursor, limit } = res.locals.query
+    // res.json(await this.productService.getByCreationTime(cursor, limit))
+
+    // CursorBased
     const { cursor, limit } = res.locals.query
-    res.json(await this.productService.getByCreationTime(cursor, limit))
+    res.json(await this.productService.getByCursor(cursor, limit))
   };
 }

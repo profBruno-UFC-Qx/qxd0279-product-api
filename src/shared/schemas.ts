@@ -47,3 +47,9 @@ export const resCollectionEntitySchemaWithTimestamp = (schema: ZodType) => {
     next: z.iso.datetime()
   })
 }
+
+export const resCollectionEntitySchemaWithCursor = (schema: ZodType) => {
+  return resCollectionEntitySchema(schema).extend({
+    next: z.string()
+  })
+}

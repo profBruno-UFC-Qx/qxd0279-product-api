@@ -2,6 +2,7 @@ import { ProductRepository } from "../v1/products.repository.js";
 import { type Product } from "../v1/products.entity.js";
 import { ProductService as ProductServiceWithoutPagination } from "../v1/products.service.js";
 import type { PaginationMetaInfo } from "../../../shared/types.js";
+import { decodeCursor, encodeCursor } from "../../../shared/cursor.js";
 
 export class ProductService extends ProductServiceWithoutPagination{
   
@@ -68,6 +69,25 @@ export class ProductService extends ProductServiceWithoutPagination{
       data,
       next: data.length > 0 ? data[data.length - 1]?.createdAt.toISOString() : undefined,
     };
+  }
+
+  async getByCursor(cursor?: string, limit: number = 10): Promise<{ data: Product[], next: string | undefined}> {
+
+    let afterId: number | undefined;
+
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      afterId = decoded.id;
+    }
+
+    const res = await this.getByKeyset(afterId, limit)
+    return {
+      data: res.data,
+      next: res.data.length
+      ? encodeCursor({ id: res.data[res.data.length - 1]?.id })
+      : undefined,
+ 
+    }
   }
 
  }

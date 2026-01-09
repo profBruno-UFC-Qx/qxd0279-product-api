@@ -4,7 +4,7 @@ import { validateBody, validateParams, validateQuery } from "../../../middleware
 import { createProduct, productSchema } from "../v1/products.schema.js"
 import { registry } from "../../../docs/openapi.js"
 import { idSchema, resCollectionEntitySchema, resCollectionEntitySchemaWithPages, resSingleEntitySchema } from "../../../shared/schemas.js"
-import { offsetPaginationQuerySchema, pagePaginationQuerySchema, timebasedPaginationQuerySchema } from "./products.schema.js"
+import { cursorPaginationQuerySchema, offsetPaginationQuerySchema, pagePaginationQuerySchema, timebasedPaginationQuerySchema } from "./products.schema.js"
 
 const productsRouter = Router()
 
@@ -128,7 +128,7 @@ registry.registerPath({
 
 const productController = new ProductController()
 
-productsRouter.get('/', validateQuery(timebasedPaginationQuerySchema), productController.getAll)
+productsRouter.get('/', validateQuery(cursorPaginationQuerySchema), productController.getAll)
 productsRouter.post('/', validateBody(createProduct), productController.add)
 productsRouter.get('/:id', validateParams(idSchema), productController.getById)
 productsRouter.put('/:id', validateParams(idSchema), validateBody(createProduct), productController.update)
