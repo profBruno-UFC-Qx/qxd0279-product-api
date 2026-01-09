@@ -17,7 +17,11 @@ export class ProductController extends ProductControllerV1 {
     //res.json(await this.productService.getAllByPage(page, pageSize));
 
     // Keyset - Pagination
+    // const { cursor, limit } = res.locals.query
+    // res.json(await this.productService.getByKeyset(cursor, limit));
+
+     // Timebased - Pagination
     const { cursor, limit } = res.locals.query
-    res.json(await this.productService.getByKeyset(cursor, limit));
+    res.json(await this.productService.getByCreationTime(cursor, limit))
   };
 }

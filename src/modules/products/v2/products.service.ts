@@ -52,4 +52,22 @@ export class ProductService extends ProductServiceWithoutPagination{
     };
   }
 
+  async getByCreationTime(timestamp?: string, limit: number = 10): Promise<{ data: Product[], next: string | undefined}> {
+  
+    const qb = ProductRepository.createQueryBuilder("product")
+    .orderBy("product.createdAt", "ASC")
+    .take(limit);
+
+    if (timestamp) {
+      qb.where("product.createdAt > :after", { after: new Date(timestamp) });
+    }
+
+    const data = await qb.getMany();
+
+    return {
+      data,
+      next: data.length > 0 ? data[data.length - 1]?.createdAt.toISOString() : undefined,
+    };
+  }
+
  }

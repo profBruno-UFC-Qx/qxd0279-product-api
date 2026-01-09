@@ -41,3 +41,9 @@ export const resCollectionEntitySchemaWithKeySet = (schema: ZodType) => {
     next: z.number().int()
   })
 }
+
+export const resCollectionEntitySchemaWithTimestamp = (schema: ZodType) => {
+  return resCollectionEntitySchema(schema).extend({
+    next: z.iso.datetime()
+  })
+}
