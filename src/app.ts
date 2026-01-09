@@ -6,7 +6,8 @@ import swaggerUi from 'swagger-ui-express'
 import { buildOpenAPIDocument } from './docs/openapi.js';
 import { handlerError } from './middlewares/errorMiddleware.js';
 import { AppDataSource } from './config/datasource.js';
-import productsRouter from './modules/products/products.routes.js';
+import productsRouterV1 from './modules/products/v1/products.routes.js';
+import productsRouterV2 from './modules/products/v2/products.routes.js';
 
 
 const app: Application = express();
@@ -30,8 +31,8 @@ AppDataSource.initialize()
 const openApiDocs = buildOpenAPIDocument()
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocs))
 
-
-app.use('/products', productsRouter)
+app.use('/v1/products', productsRouterV1)
+app.use('/v2/products', productsRouterV2)
 
 app.get('/', (req: Request, res: Response) => {
     res.send({ message: 'API de Produtos rodando com sucesso!' });
