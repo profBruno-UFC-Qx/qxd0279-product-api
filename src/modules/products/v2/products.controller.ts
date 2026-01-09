@@ -12,9 +12,9 @@ export class ProductController extends ProductControllerV1 {
     // const { offset, limit } = res.locals.query
     // res.json(await this.productService.getAllWithOffset(offset, limit));
 
-    // PageBased - Pagination
-    //const { page, pageSize } = res.locals.query
-    //res.json(await this.productService.getAllByPage(page, pageSize));
+    //PageBased - Pagination
+    const { page, pageSize } = res.locals.query
+    res.json(await this.productService.getAllByPage(page, pageSize));
 
     // Keyset - Pagination
     // const { cursor, limit } = res.locals.query
@@ -25,7 +25,7 @@ export class ProductController extends ProductControllerV1 {
     // res.json(await this.productService.getByCreationTime(cursor, limit))
 
     // CursorBased
-    const { cursor, limit } = res.locals.query
-    res.json(await this.productService.getByCursor(cursor, limit))
+    // const { cursor, limit } = res.locals.query
+    // res.json(await this.productService.getByCursor(cursor, limit))
   };
 }

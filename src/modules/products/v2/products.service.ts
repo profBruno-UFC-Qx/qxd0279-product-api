@@ -18,7 +18,6 @@ export class ProductService extends ProductServiceWithoutPagination{
   
   async getAllByPage(page: number, pageSize: number): Promise<{ data: Product[], meta: PaginationMetaInfo}> {
     const offset = (page - 1) * pageSize
-    console.log(offset, page, pageSize)
     const [data, total] = await ProductRepository.findAndCount({
       skip: offset,
       take: pageSize,
